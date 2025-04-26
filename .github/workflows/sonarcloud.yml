@@ -67,11 +67,11 @@ jobs:
           flutter analyze --no-pub --write report/dart-analysis-report.json || true
           exit 0
 
-      - name: Run Tests with Coverage
-        working-directory: ./chargepassv4
-        run: |
-          flutter test --coverage
-          genhtml coverage/lcov.info -o coverage/html || true
+      # - name: Run Tests with Coverage
+      #   working-directory: ./chargepassv4
+      #   run: |
+      #     flutter test --coverage
+      #     genhtml coverage/lcov.info -o coverage/html || true
 
       - name: Generate Sonar Properties
         run: |

@@ -28,12 +28,12 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Fix Android NDK Version
-        working-directory: ./chargepassv4
-        run: |
-          # Actualizar NDK version en build.gradle
-          sed -i '/android {/a\        ndkVersion = "27.0.12077973"' android/app/build.gradle
-          cat android/app/build.gradle | grep -A 2 "android {"
+      # - name: Fix Android NDK Version
+      #   working-directory: ./chargepassv4
+      #   run: |
+      #     # Actualizar NDK version en build.gradle
+      #     sed -i '/android {/a\        ndkVersion = "27.0.12077973"' android/app/build.gradle
+      #     cat android/app/build.gradle | grep -A 2 "android {"
 
       - name: Install Dependencies
         working-directory: ./chargepassv4

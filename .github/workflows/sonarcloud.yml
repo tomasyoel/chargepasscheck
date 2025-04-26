@@ -41,15 +41,15 @@ jobs:
           flutter pub get
           flutter pub global activate dart_code_metrics
 
-      - name: Create Placeholder Files
-        working-directory: ./chargepassv4
-        run: |
-          mkdir -p lib/views lib/models
-          touch lib/views/home.dart lib/views/login.dart lib/views/registro.dart lib/models/usuario.dart
-          echo "class HomeView {}" > lib/views/home.dart
-          echo "class LoginView {}" > lib/views/login.dart
-          echo "class RegisterView {}" > lib/views/registro.dart
-          echo "class UserModel {}" > lib/models/usuario.dart
+      # - name: Create Placeholder Files
+      #   working-directory: ./chargepassv4
+      #   run: |
+      #     mkdir -p lib/views lib/models
+      #     touch lib/views/home.dart lib/views/login.dart lib/views/registro.dart lib/models/usuario.dart
+      #     echo "class HomeView {}" > lib/views/home.dart
+      #     echo "class LoginView {}" > lib/views/login.dart
+      #     echo "class RegisterView {}" > lib/views/registro.dart
+      #     echo "class UserModel {}" > lib/models/usuario.dart
 
       - name: Run Analysis
         working-directory: ./chargepassv4

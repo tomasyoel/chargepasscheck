@@ -55,6 +55,5 @@ resource "google_firestore_database" "chargepass_db" {
   name                        = "(default)"
   location_id                 = "nam5" # us-central
   type                        = "FIRESTORE_NATIVE"
-  deletion_policy             = "DELETE"
   depends_on                  = [google_firebase_project.default]
 }

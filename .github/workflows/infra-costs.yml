@@ -47,18 +47,29 @@ jobs:
 
       - name: Run Infracost Analysis
         run: |
-          # Generar reporte HTML
+          # Configurar para mostrar todos los recursos (incluyendo $0)
+          infracost configure set show_all_resources true
+          
+          # Generar reporte HTML detallado
           infracost breakdown \
             --path ./infra/plan.json \
             --format html \
             --out-file infracost.html \
-            --show-skipped
-
-          # Generar reporte en tabla para el log
+            --show-skipped \
+            --fields "resourceType,monthlyQuantity,unit,monthlyCost" \
+            --usage-file ./infra/infracost-usage.yml
+          
+          # Generar versión para logs con todos los detalles
           infracost breakdown \
             --path ./infra/plan.json \
             --format table \
-            --show-skipped
+            --show-skipped \
+            --fields "resourceType,monthlyQuantity,unit,monthlyCost" \
+            --usage-file ./infra/infracost-usage.yml
+
+          # Mostrar preview en logs
+          echo "=== RESUMEN DE COSTOS ==="
+          cat infracost.html | grep -A 10 -B 10 "resourceType"
 
       - name: Upload Cost Report
         uses: actions/upload-artifact@v4

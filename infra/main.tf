@@ -4,9 +4,9 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 4.85"
     }
-    firebase = {
-      source  = "google/gcp"
-      version = "~> 1.2"
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~> 4.85"
     }
   }
 }
@@ -35,18 +35,20 @@ provider "google-beta" {
   region      = "us-central1"
 }
 
-# Configuración específica para ChargePass
+# Habilitar APIs necesarias
 resource "google_project_service" "firebase" {
   project = var.project_id
   service = "firebase.googleapis.com"
 }
 
-resource "google_firebase_project" "chargepass" {
+# Configuración de Firebase
+resource "google_firebase_project" "default" {
   provider = google-beta
   project  = var.project_id
   depends_on = [google_project_service.firebase]
 }
 
+# Firestore Database
 resource "google_firestore_database" "chargepass_db" {
   provider                    = google-beta
   project                     = var.project_id
@@ -54,5 +56,5 @@ resource "google_firestore_database" "chargepass_db" {
   location_id                 = "nam5" # us-central
   type                        = "FIRESTORE_NATIVE"
   deletion_policy             = "DELETE"
-  depends_on                  = [google_firebase_project.chargepass]
+  depends_on                  = [google_firebase_project.default]
 }

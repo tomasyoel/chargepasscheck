@@ -5,37 +5,26 @@ on:
   pull_request:
     branches: [ main ]
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   infracost:
-    name: Infracost Analysis
+    name: Infracost
     runs-on: ubuntu-latest
-    timeout-minutes: 20
     env:
       PROJECT_ID: "chargepass-${{ github.event.number || github.sha }}"
-      TF_CLI_ARGS: "-no-color"
-      TF_IN_AUTOMATION: "true"
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.7.4"
-          terraform_wrapper: false
 
       - name: Setup Infracost
         uses: infracost/actions/setup@v3
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
-          pricing-api-endpoint: https://pricing.api.infracost.io
 
       - name: Terraform Init
         working-directory: ./infra
@@ -43,48 +32,35 @@ jobs:
           GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         run: |
           echo "$GOOGLE_CREDENTIALS" > chargepass-creds.json
-          chmod 400 chargepass-creds.json
-          terraform init -input=false -backend=false
-          terraform providers lock \
-            -platform=linux_amd64 \
-            -platform=darwin_arm64 \
-            -platform=windows_amd64
+          terraform init -input=false
 
       - name: Terraform Plan
         working-directory: ./infra
         run: |
-          terraform validate
           terraform plan \
-            -input=false \
             -var="gcp_credentials=chargepass-creds.json" \
             -var="project_id=${{ secrets.PROJECT_ID || 'chargepass-dev' }}" \
             -out tfplan
           terraform show -json tfplan > plan.json
 
-      - name: Infracost Analysis
+      - name: Run Infracost
         run: |
           infracost breakdown \
             --path ./infra/plan.json \
             --format html \
-            --out-file ./infracost.html \
-            --show-skipped \
-            --usage-file ./infra/infracost-usage.yml
+            --out-file infracost.html \
+            --show-skipped
 
       - name: Upload Report
         uses: actions/upload-artifact@v4
         with:
           name: chargepass-cost-report
-          path: |
-            ./infracost.html
-            ./infra/plan.json
-          retention-days: 3
+          path: infracost.html
 
-      - name: Comment PR
+      - name: Post Infracost Comment
         if: github.event_name == 'pull_request'
-        uses: infracost/actions/comment@v3
+        uses: infracost/actions/comment@v2
         with:
           path: ./infra/plan.json
           behavior: update
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          target-type: pull-request
-          show-changed: true

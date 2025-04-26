@@ -27,6 +27,8 @@ jobs:
         with:
           channel: 'stable'
           cache: true
+          cache-key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}
+          cache-path: ${{ github.workspace }}/.pub-cache
 
       # - name: Fix Android NDK Version
       #   working-directory: ./chargepassv4
@@ -56,27 +58,66 @@ jobs:
       #   working-directory: ./chargepassv4
       #   run: flutter analyze
 
+      - name: Create Analysis Directory
+        run: mkdir -p report
+
       - name: Run Analysis
         working-directory: ./chargepassv4
         run: |
-          flutter analyze --no-pub || echo "Analysis completed with warnings"
+          flutter analyze --no-pub --write report/dart-analysis-report.json || true
           exit 0
 
-      - name: Run Tests
+      - name: Run Tests with Coverage
         working-directory: ./chargepassv4
-        run: flutter test --coverage
+        run: |
+          flutter test --coverage
+          genhtml coverage/lcov.info -o coverage/html || true
 
       - name: Generate Sonar Properties
         run: |
-          echo "sonar.projectKey=tomasyoel_chargepasscheck" > sonar-project.properties
-          echo "sonar.organization=tomasyoel" >> sonar-project.properties
-          echo "sonar.sources=chargepassv4/lib" >> sonar-project.properties
-          echo "sonar.tests=chargepassv4/test" >> sonar-project.properties
-          echo "sonar.coverageReportPaths=chargepassv4/coverage/lcov.info" >> sonar-project.properties
-          echo "sonar.dart.analysis.reportPath=report/dart-analysis-report.json" >> sonar-project.properties
+          cat <<EOF > sonar-project.properties
+          sonar.projectKey=tomasyoel_chargepasscheck
+          sonar.organization=tomasyoel
+          sonar.projectName=ChargePassV4
+          sonar.sources=chargepassv4/lib
+          sonar.tests=chargepassv4/test
+          sonar.coverageReportPaths=chargepassv4/coverage/lcov.info
+          sonar.dart.analysis.reportPath=report/dart-analysis-report.json
+          sonar.exclusions=**/*.g.dart,**/*.freezed.dart,**/*.mocks.dart
+          EOF
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectBaseDir: .
+          args: >
+            -Dsonar.verbose=true
+            -Dsonar.analysis.ignoreNotFound=true
+
+      # - name: Run Analysis
+      #   working-directory: ./chargepassv4
+      #   run: |
+      #     flutter analyze --no-pub || echo "Analysis completed with warnings"
+      #     exit 0
+
+      # - name: Run Tests
+      #   working-directory: ./chargepassv4
+      #   run: flutter test --coverage
+
+      # - name: Generate Sonar Properties
+      #   run: |
+      #     echo "sonar.projectKey=tomasyoel_chargepasscheck" > sonar-project.properties
+      #     echo "sonar.organization=tomasyoel" >> sonar-project.properties
+      #     echo "sonar.sources=chargepassv4/lib" >> sonar-project.properties
+      #     echo "sonar.tests=chargepassv4/test" >> sonar-project.properties
+      #     echo "sonar.coverageReportPaths=chargepassv4/coverage/lcov.info" >> sonar-project.properties
+      #     echo "sonar.dart.analysis.reportPath=report/dart-analysis-report.json" >> sonar-project.properties
+
+      # - name: SonarCloud Scan
+      #   uses: SonarSource/sonarqube-scan-action@v5
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,54 @@
+name: SonarCloud Analysis
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  sonarcloud:
+    name: SonarQube
+    runs-on: ubuntu-latest 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
+
+      - name: Setup Java (Requisito de SonarScanner)
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+          cache-key: flutter-pub-cache
+
+      - name: Install Dependencies
+        run: |
+          flutter pub get
+          flutter pub global activate dart_code_metrics
+
+      - name: Build Project (Generar archivos necesarios)
+        run: flutter build apk --debug
+
+      - name: Run SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        with:
+          projectBaseDir: ./chargepassv4 
+          args: >
+            -Dsonar.projectKey=ChargePassV4
+            -Dsonar.projectName=ChargePassV4
+            -Dsonar.dart.analysis.enabled=true
+            -Dsonar.sources=lib
+            -Dsonar.tests=test
+            -Dsonar.coverageReportPaths=coverage/lcov.info
+            -Dsonar.dart.analyzer.reportPath=report/dart-analysis-report.json

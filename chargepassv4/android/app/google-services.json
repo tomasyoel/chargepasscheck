@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "219379898770",
+    "project_id": "chargepass-48fb9",
+    "storage_bucket": "chargepass-48fb9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:219379898770:android:f75ea2a971676dfdeec94b",
+        "android_client_info": {
+          "package_name": "com.example.chargepass"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCq6sWaHGOn01Hx8tZKPcevbfxy-tO0rJE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:219379898770:android:332d15e8de4435a1eec94b",
+        "android_client_info": {
+          "package_name": "com.example.chargepassv4"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCq6sWaHGOn01Hx8tZKPcevbfxy-tO0rJE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

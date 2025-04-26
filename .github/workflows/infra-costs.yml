@@ -47,10 +47,17 @@ jobs:
 
       - name: Run Infracost Analysis
         run: |
+          # Generar reporte HTML
           infracost breakdown \
             --path ./infra/plan.json \
-            --format table-html \
+            --format html \
             --out-file infracost.html \
+            --show-skipped
+
+          # Generar reporte en tabla para el log
+          infracost breakdown \
+            --path ./infra/plan.json \
+            --format table \
             --show-skipped
 
       - name: Upload Cost Report

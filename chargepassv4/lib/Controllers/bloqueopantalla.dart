@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use, unused_catch_clause, use_super_parameters
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -19,7 +21,7 @@ class UpdateBlockScreen extends StatelessWidget {
       if (await canLaunch(whatsappUrl)) {
         await launch(whatsappUrl);
       } else {
-        print("No se pudo abrir WhatsApp ni en el navegador.");
+        //print("No se pudo abrir WhatsApp ni en el navegador.");
       }
     }
   }

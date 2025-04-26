@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PROJECT_ID: "chargepass-${{ github.event.number || github.sha }}"
+      INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
     
     steps:
       - name: Checkout code
@@ -25,10 +26,6 @@ jobs:
         run: |
           curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
           echo "$HOME/.infracost/bin" >> $GITHUB_PATH
-
-      - name: Configure Infracost
-        run: |
-          infracost configure set api-key ${{ secrets.INFRACOST_API_KEY }}
 
       - name: Terraform Init
         working-directory: ./infra

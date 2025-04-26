@@ -1,43 +1,57 @@
 name: ChargePass Cost Analysis
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   infracost:
+    name: Infracost
     runs-on: ubuntu-latest
     env:
-      PROJECT_ID: chargepass-48fb9
+      PROJECT_ID: "chargepass-$(echo ${{ github.ref }} | cut -d'/' -f3)"
+    
     steps:
-      - uses: actions/checkout@v3
-      
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.3.0"
+          terraform_version: "1.7.4"
 
       - name: Setup Infracost
-        uses: infracost/actions/setup@v2
+        uses: infracost/actions/setup@v3
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
 
-      - name: Run Terraform Plan
+      - name: Terraform Init
         working-directory: ./infra
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         run: |
           echo "$GOOGLE_CREDENTIALS" > chargepass-creds.json
           terraform init
-          terraform plan -var="gcp_credentials=chargepass-creds.json" -var="project_id=$PROJECT_ID" -out chargepass.plan
-          terraform show -json chargepass.plan > chargepass-plan.json
 
-      - name: Calculate Costs
+      - name: Terraform Plan
+        working-directory: ./infra
         run: |
-          infracost breakdown --path ./infra/chargepass-plan.json \
-            --format table \
-            --out-file chargepass-costs.md
-          cat chargepass-costs.md
+          terraform plan \
+            -var="gcp_credentials=chargepass-creds.json" \
+            -var="project_id=${{ vars.PROJECT_ID || 'chargepass-default' }}" \
+            -out chargepass.plan
+          terraform show -json chargepass.plan > plan.json
 
-      - name: Upload Cost Report
-        uses: actions/upload-artifact@v3
+      - name: Run Infracost
+        run: |
+          infracost breakdown --path ./infra/plan.json \
+            --format table-html \
+            --out-file infracost.html \
+            --show-skipped
+
+      - name: Upload Infracost Report
+        uses: actions/upload-artifact@v4
         with:
           name: chargepass-cost-report
-          path: chargepass-costs.md
+          path: infracost.html

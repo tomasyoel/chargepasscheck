@@ -73,6 +73,7 @@ jobs:
           echo "sonar.sources=chargepassv4/lib" >> sonar-project.properties
           echo "sonar.tests=chargepassv4/test" >> sonar-project.properties
           echo "sonar.coverageReportPaths=chargepassv4/coverage/lcov.info" >> sonar-project.properties
+          echo "sonar.dart.analysis.reportPath=report/dart-analysis-report.json" >> sonar-project.properties
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v5

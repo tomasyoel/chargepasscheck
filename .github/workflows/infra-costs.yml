@@ -1,13 +1,13 @@
 name: ChargePass Cost Analysis
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   infracost:
-    name: Infracost Analysis
+    name: Infracost
     runs-on: ubuntu-latest
     env:
       PROJECT_ID: "chargepass-${{ github.event.number || github.sha }}"
@@ -21,10 +21,14 @@ jobs:
         with:
           terraform_version: "1.7.4"
 
-      - name: Setup Infracost
-        uses: infracost/setup-action@v3
-        with:
-          api-key: ${{ secrets.INFRACOST_API_KEY }}
+      - name: Install Infracost CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
+          echo "$HOME/.infracost/bin" >> $GITHUB_PATH
+
+      - name: Configure Infracost
+        run: |
+          infracost configure set api-key ${{ secrets.INFRACOST_API_KEY }}
 
       - name: Terraform Init
         working-directory: ./infra
@@ -32,6 +36,7 @@ jobs:
           GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         run: |
           echo "$GOOGLE_CREDENTIALS" > chargepass-creds.json
+          chmod 400 chargepass-creds.json
           terraform init -input=false
 
       - name: Terraform Plan
@@ -43,7 +48,7 @@ jobs:
             -out tfplan
           terraform show -json tfplan > plan.json
 
-      - name: Run Infracost
+      - name: Run Infracost Analysis
         run: |
           infracost breakdown \
             --path ./infra/plan.json \
@@ -51,16 +56,18 @@ jobs:
             --out-file infracost.html \
             --show-skipped
 
-      - name: Upload Report
+      - name: Upload Cost Report
         uses: actions/upload-artifact@v4
         with:
           name: chargepass-cost-report
           path: infracost.html
 
-      - name: Post Infracost Comment
+      - name: Post PR Comment (Infracost)
         if: github.event_name == 'pull_request'
-        uses: infracost/infracost-github-action@v0.1.0
-        with:
-          path: ./infra/plan.json
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          behavior: update
+        run: |
+          infracost comment github \
+            --path ./infra/plan.json \
+            --repo $GITHUB_REPOSITORY \
+            --github-token ${{ secrets.GITHUB_TOKEN }} \
+            --pull-request ${{ github.event.pull_request.number }} \
+            --behavior update

@@ -1,0 +1,43 @@
+name: ChargePass Cost Analysis
+on: [push, pull_request]
+
+jobs:
+  infracost:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_ID: chargepass-48fb9
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: "1.3.0"
+
+      - name: Setup Infracost
+        uses: infracost/actions/setup@v2
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      - name: Run Terraform Plan
+        working-directory: ./infra
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+        run: |
+          echo "$GOOGLE_CREDENTIALS" > chargepass-creds.json
+          terraform init
+          terraform plan -var="gcp_credentials=chargepass-creds.json" -var="project_id=$PROJECT_ID" -out chargepass.plan
+          terraform show -json chargepass.plan > chargepass-plan.json
+
+      - name: Calculate Costs
+        run: |
+          infracost breakdown --path ./infra/chargepass-plan.json \
+            --format table \
+            --out-file chargepass-costs.md
+          cat chargepass-costs.md
+
+      - name: Upload Cost Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: chargepass-cost-report
+          path: chargepass-costs.md

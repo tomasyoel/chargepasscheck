@@ -15,7 +15,7 @@ class UpdateBlockScreen extends StatelessWidget {
         await launch(whatsappUrl);
       }
     } on Exception catch (e) {
-      print("No se pudo lanzar WhatsApp: ${e.toString()}");
+      //print("No se pudo lanzar WhatsApp: ${e.toString()}");
       if (await canLaunch(whatsappUrl)) {
         await launch(whatsappUrl);
       } else {

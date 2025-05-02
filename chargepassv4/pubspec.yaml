@@ -50,6 +50,8 @@ dependencies:
   url_launcher: ^6.3.1
   encrypt: ^5.0.3
   provider: ^6.1.4
+  mockito: ^5.4.6
+  build_runner: ^2.4.15
 
 dev_dependencies:
   flutter_test:

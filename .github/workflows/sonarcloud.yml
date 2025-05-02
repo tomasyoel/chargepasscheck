@@ -42,6 +42,23 @@ jobs:
         run: |
           flutter pub get
           flutter pub global activate dart_code_metrics
+          
+      # Nuevo paso: Generar automáticamente los archivos de test
+      - name: Generate Test Files and Mocks
+        working-directory: ./chargepassv4
+        run: |
+          # Recrear la carpeta test si no existe
+          mkdir -p test/widgets
+          
+          # Verificar si el directorio test está vacío y copiar los test de ejemplo si es necesario
+          if [ -z "$(ls -A test)" ]; then
+            echo "Generando archivos de test de ejemplo..."
+            # Aquí puedes agregar los comandos para generar o copiar tus archivos de test desde un repo o template
+            # Por ejemplo, podrías usar curl para descargar plantillas de test o copiarlas desde otro directorio
+          fi
+          
+          # Generar los mocks automáticamente
+          flutter pub run build_runner build --delete-conflicting-outputs
 
       # - name: Create Placeholder Files
       #   working-directory: ./chargepassv4
@@ -96,6 +113,119 @@ jobs:
           args: >
             -Dsonar.verbose=true
             -Dsonar.analysis.ignoreNotFound=true
+
+
+
+
+
+# name: SonarCloud Analysis
+# on:
+#   push:
+#     branches: [ main ]
+#   pull_request:
+#     types: [ opened, synchronize, reopened ]
+
+# jobs:
+#   sonarcloud:
+#     name: SonarQube
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
+
+#       - name: Setup Java
+#         uses: actions/setup-java@v3
+#         with:
+#           distribution: 'temurin'
+#           java-version: '17'
+
+#       - name: Setup Flutter
+#         uses: subosito/flutter-action@v2
+#         with:
+#           channel: 'stable'
+#           cache: true
+#           cache-key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}
+#           cache-path: ${{ github.workspace }}/.pub-cache
+
+#       # - name: Fix Android NDK Version
+#       #   working-directory: ./chargepassv4
+#       #   run: |
+#       #     # Actualizar NDK version en build.gradle
+#       #     sed -i '/android {/a\        ndkVersion = "27.0.12077973"' android/app/build.gradle
+#       #     cat android/app/build.gradle | grep -A 2 "android {"
+
+#       - name: Install Dependencies
+#         working-directory: ./chargepassv4
+#         run: |
+#           flutter pub get
+#           flutter pub global activate dart_code_metrics
+
+#       # - name: Create Placeholder Files
+#       #   working-directory: ./chargepassv4
+#       #   run: |
+#       #     mkdir -p lib/views lib/models
+#       #     touch lib/views/home.dart lib/views/login.dart lib/views/registro.dart lib/models/usuario.dart
+#       #     echo "class HomeView {}" > lib/views/home.dart
+#       #     echo "class LoginView {}" > lib/views/login.dart
+#       #     echo "class RegisterView {}" > lib/views/registro.dart
+#       #     echo "class UserModel {}" > lib/models/usuario.dart
+      
+#       # este analisis verifica que nada falle pero vamos a cambiarlo por otro que omita las fallas
+#       # - name: Run Analysis
+#       #   working-directory: ./chargepassv4
+#       #   run: flutter analyze
+
+#       - name: Create Analysis Directory
+#         run: mkdir -p report
+
+#       - name: Run Analysis
+#         working-directory: ./chargepassv4
+#         run: |
+#           flutter analyze --no-pub --write report/dart-analysis-report.json || true
+#           exit 0
+
+#       - name: Run Tests with Coverage
+#         working-directory: ./chargepassv4
+#         run: |
+#           flutter test --coverage
+#           genhtml coverage/lcov.info -o coverage/html || true
+
+#       - name: Generate Sonar Properties
+#         run: |
+#           cat <<EOF > sonar-project.properties
+#           sonar.projectKey=tomasyoel_chargepasscheck
+#           sonar.organization=tomasyoel
+#           sonar.projectName=ChargePassV4
+#           sonar.sources=chargepassv4/lib
+#           sonar.tests=chargepassv4/test
+#           sonar.coverageReportPaths=chargepassv4/coverage/lcov.info
+#           sonar.dart.analysis.reportPath=report/dart-analysis-report.json
+#           sonar.exclusions=**/*.g.dart,**/*.freezed.dart,**/*.mocks.dart
+#           EOF
+
+#       - name: SonarCloud Scan
+#         uses: SonarSource/sonarqube-scan-action@v5
+#         env:
+#           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#         with:
+#           projectBaseDir: .
+#           args: >
+#             -Dsonar.verbose=true
+#             -Dsonar.analysis.ignoreNotFound=true
+
+
+
+
+
+
+
+
+
+
 
       # - name: Run Analysis
       #   working-directory: ./chargepassv4

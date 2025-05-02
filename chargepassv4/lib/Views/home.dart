@@ -252,8 +252,8 @@ class _PasswordModalContentState extends State<PasswordModalContent> {
 
   @override
   Widget build(BuildContext context) {
-    //final themeProvider = Provider.of<ThemeProvider>(context);
-    //final isDarkMode = themeProvider.isDarkMode;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
 
     return DraggableScrollableSheet(
       expand: false,

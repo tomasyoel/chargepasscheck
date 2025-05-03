@@ -14,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Importante para SonarCloud para ver el historial de cambios
 
       - name: Setup Java
         uses: actions/setup-java@v3
@@ -116,33 +116,72 @@ jobs:
         working-directory: ./chargepassv4
         run: |
           flutter test --coverage || true
+          
+          # Verificar si se generó el archivo lcov.info
+          if [ ! -f "coverage/lcov.info" ]; then
+            # Crear un archivo lcov.info vacío para evitar errores
+            mkdir -p coverage
+            echo "TN:" > coverage/lcov.info
+          fi
+          
+          # Crear el directorio para el reporte HTML
           mkdir -p coverage/html
           genhtml coverage/lcov.info -o coverage/html || true
+
+      - name: Debug Info
+        run: |
+          echo "Contenido del directorio de trabajo:"
+          ls -la
+          echo "Contenido de chargepassv4:"
+          ls -la chargepassv4
+          echo "Contenido de chargepassv4/coverage (si existe):"
+          ls -la chargepassv4/coverage || echo "El directorio no existe"
+          echo "Verificando archivo lcov.info:"
+          cat chargepassv4/coverage/lcov.info || echo "El archivo no existe"
 
       - name: Generate Sonar Properties
         run: |
           cat <<EOF > sonar-project.properties
           sonar.projectKey=tomasyoel_chargepasscheck
           sonar.organization=tomasyoel
+          
+          # Información del proyecto
           sonar.projectName=ChargePassV4
+          sonar.projectVersion=1.0
+          
+          # Rutas de análisis
           sonar.sources=chargepassv4/lib
           sonar.tests=chargepassv4/test
-          sonar.coverageReportPaths=chargepassv4/coverage/lcov.info
+          
+          # Configuración de lenguaje
+          sonar.language=dart
+          sonar.sourceEncoding=UTF-8
+          
+          # Informes de cobertura y análisis
           sonar.dart.analysis.reportPath=report/dart-analysis-report.json
-          sonar.exclusions=**/*.g.dart,**/*.freezed.dart,**/*.mocks.dart
+          sonar.dart.coverage.reportPaths=chargepassv4/coverage/lcov.info
+          
+          # Exclusiones
+          sonar.exclusions=**/*.g.dart,**/*.freezed.dart,**/*.mocks.dart,**/generated_*.dart
+          sonar.test.exclusions=**/*.mocks.dart
+          sonar.coverage.exclusions=**/*.g.dart,**/*.freezed.dart,**/*.mocks.dart,**/generated_*.dart
+          
+          # Configuración adicional
+          sonar.verbose=true
+          sonar.scm.disabled=false
+          sonar.analysis.ignoreNotFound=true
           EOF
+          
+          cat sonar-project.properties
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
         with:
           projectBaseDir: .
-          args: >
-            -Dsonar.verbose=true
-            -Dsonar.analysis.ignoreNotFound=true
-
 
 
 
